@@ -58,7 +58,7 @@ final class ThumbnailProvider: QLThumbnailProvider {
                     hints: nil
                 ) else { return false }
 
-                context.draw(cgImage, in: CGRect(origin: .zero, size: size))
+                context.draw(cgImage, in: CGRect(origin: .zero, size: pixelSize))
                 return true
             }
 
@@ -75,14 +75,25 @@ final class ThumbnailProvider: QLThumbnailProvider {
         let keyLight = SCNLight()
         keyLight.type = .directional
         keyLight.intensity = 800
+        keyLight.color = NSColor.white
         let keyNode = SCNNode()
         keyNode.light = keyLight
         keyNode.eulerAngles = SCNVector3(-Float.pi / 4, Float.pi / 4, 0)
         scene.rootNode.addChildNode(keyNode)
 
+        let fillLight = SCNLight()
+        fillLight.type = .directional
+        fillLight.intensity = 300
+        fillLight.color = NSColor(white: 0.8, alpha: 1)
+        let fillNode = SCNNode()
+        fillNode.light = fillLight
+        fillNode.eulerAngles = SCNVector3(-Float.pi / 6, -Float.pi / 3, 0)
+        scene.rootNode.addChildNode(fillNode)
+
         let ambientLight = SCNLight()
         ambientLight.type = .ambient
-        ambientLight.intensity = 250
+        ambientLight.intensity = 150
+        ambientLight.color = NSColor(white: 0.5, alpha: 1)
         let ambientNode = SCNNode()
         ambientNode.light = ambientLight
         scene.rootNode.addChildNode(ambientNode)
@@ -98,10 +109,12 @@ final class ThumbnailProvider: QLThumbnailProvider {
             maxBounds.y - minBounds.y,
             maxBounds.z - minBounds.z
         )
-        let maxDim: CGFloat = max(max(extents.x, extents.y), extents.z)
+        // Fit by height for a square thumbnail so the avatar fills the frame
+        // vertically. Use a tighter padding (1.1x) than the preview (1.4x).
+        let maxDim: CGFloat = max(extents.y, extents.z)
         let fovRadians: CGFloat = 60.0 * CGFloat.pi / 180.0
         let halfFov: CGFloat = fovRadians / 2.0
-        let distance: CGFloat = (maxDim / (2.0 * tan(halfFov))) * 1.4
+        let distance: CGFloat = (maxDim / (2.0 * tan(halfFov))) * 1.1
 
         let camera = SCNCamera()
         camera.fieldOfView = 60

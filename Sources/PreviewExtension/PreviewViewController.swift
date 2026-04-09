@@ -61,6 +61,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
                 guard let self else { return }
 
                 self.spinner.stopAnimation(nil)
+                self.spinner.isHidden = true
 
                 if let error {
                     handler(error)
