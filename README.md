@@ -161,5 +161,3 @@ BUILT=$(find ~/Library/Developer/Xcode/DerivedData/VRMQuickLook-* \
 
 ditto -c -k --keepParent "$BUILT" VRMQuickLook.zip
 ```
-
-> Use `ditto` (not `zip`) to package the app — it preserves symlinks and extended attributes that the app bundle requires.
