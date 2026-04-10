@@ -18,9 +18,9 @@ settings:
     MACOSX_DEPLOYMENT_TARGET: "13.0"
     ARCHS: "$(ARCHS_STANDARD)"
     ONLY_ACTIVE_ARCH: NO
-    CODE_SIGN_STYLE: Automatic
-    DEVELOPMENT_TEAM: 59748AM4YC
-    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    ENABLE_HARDENED_RUNTIME: NO
 
 targets:
 
@@ -47,10 +47,7 @@ targets:
           if [ -d "$SRC" ]; then
             rm -rf "$DST"
             ditto "$SRC" "$DST"
-            codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" \
-              --preserve-metadata=identifier,entitlements,flags \
-              --timestamp=none \
-              "${DST}/Versions/A"
+            codesign --force --sign - "${DST}/Versions/A"
           fi
     dependencies:
       - package: GLTFKit2
