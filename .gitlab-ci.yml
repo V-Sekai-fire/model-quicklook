@@ -1,0 +1,28 @@
+stages:
+  - publish
+
+publish_public_github:
+  stage: publish
+  image: python:3.12-slim
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  before_script:
+    - set -euo pipefail
+    - apt-get update -qq
+    - apt-get install -y --no-install-recommends git ca-certificates openssh-client
+    - pip install --no-cache-dir git-filter-repo
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$GITHUB_SSH_KEY_B64" | base64 --decode > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+    - ssh-keyscan github.com >> ~/.ssh/known_hosts
+  script:
+    - git clone --mirror "$CI_REPOSITORY_URL" export.git
+    - cd export.git
+    - |
+      git filter-repo --force --commit-callback '
+      commit.author_name = b"gooncorp"
+      commit.author_email = b"gooncorp@proton.me"
+      commit.committer_name = b"gooncorp"
+      commit.committer_email = b"gooncorp@proton.me"
+      '
+    - git remote add github "git@github.com:gooncorp/vrm-quicklook.git"
+    - git push github +refs/heads/main:refs/heads/main
