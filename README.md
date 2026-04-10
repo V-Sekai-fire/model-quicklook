@@ -1,130 +1,121 @@
 # VRM QuickLook
 
-macOS QuickLook plugin for `.vrm` and `.glb` 3D avatar files. Provides Finder thumbnails and interactive Space bar previews using SceneKit.
+macOS QuickLook plugin for `.vrm` 3D avatar files. Adds Finder thumbnails and interactive Space bar previews.
 
-## Requirements
-
-- macOS 13.0 or later (Apple Silicon or Intel)
-- Xcode 15 or later
-- [xcodegen](https://github.com/yonaskolb/XcodeGen)
-
-## Building
-
-**1. Install xcodegen** (if not already installed):
-
-```bash
-brew install xcodegen
-```
-
-**2. Generate the Xcode project:**
-
-```bash
-xcodegen generate
-```
-
-This only needs to be re-run when `project.yml` changes.
-
-**3. Build the app:**
-
-```bash
-xcodebuild -project VRMQuickLook.xcodeproj \
-  -scheme VRMQuickLook \
-  -configuration Debug \
-  -destination 'platform=macOS' \
-  build
-```
-
-The built app will be in `~/Library/Developer/Xcode/DerivedData/VRMQuickLook-*/Build/Products/Debug/VRMQuickLook.app`.
+![macOS 13+](https://img.shields.io/badge/macOS-13%2B-blue) ![Apple Silicon + Intel](https://img.shields.io/badge/arch-Apple%20Silicon%20%7C%20Intel-lightgrey)
 
 ## Installing
 
-Copy the app to `/Applications` and register it with Launch Services:
+### Option 1 — Download (recommended)
+
+1. Go to the [Releases](../../releases) page and download the latest `VRMQuickLook.app.zip`.
+2. Unzip and move **VRMQuickLook.app** to your `/Applications` folder.
+3. Open **Terminal** and run:
 
 ```bash
-BUILT_APP=$(find ~/Library/Developer/Xcode/DerivedData/VRMQuickLook-* \
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
+  -f /Applications/VRMQuickLook.app
+qlmanage -r && qlmanage -r cache
+```
+
+4. Open a folder containing `.vrm` files in Finder — thumbnails will appear. Press **Space** on any `.vrm` file for an interactive 3D preview.
+
+> **First launch:** macOS may show a "cannot be opened" Gatekeeper prompt. Right-click the app in Finder, choose **Open**, then click **Open** again to allow it.
+
+---
+
+### Option 2 — Build from source
+
+**Requirements:** macOS 13+, Xcode 15+, [xcodegen](https://github.com/yonaskolb/XcodeGen)
+
+```bash
+brew install xcodegen
+git clone https://github.com/YOUR_USERNAME/vrm-quicklook
+cd vrm-quicklook
+xcodegen generate
+```
+
+Open `VRMQuickLook.xcodeproj` in Xcode, set your **Team** under *Signing & Capabilities* for all three targets, then build (⌘B).
+
+```bash
+BUILT=$(find ~/Library/Developer/Xcode/DerivedData/VRMQuickLook-* \
   -name "VRMQuickLook.app" -path "*/Debug/*" 2>/dev/null | head -1)
 
-rm -rf /Applications/VRMQuickLook.app
-cp -R "$BUILT_APP" /Applications/VRMQuickLook.app
+cp -R "$BUILT" /Applications/VRMQuickLook.app
 
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
   -f /Applications/VRMQuickLook.app
-
-qlmanage -r
-qlmanage -r cache
+qlmanage -r && qlmanage -r cache
 ```
 
-After installing, **re-index your VRM files** so Spotlight assigns them the correct UTI:
-
-```bash
-mdimport /path/to/your/vrm/folder/
-```
-
-Then navigate away from the folder in Finder and back — thumbnails will regenerate.
+---
 
 ## Uninstalling
 
 ```bash
 rm -rf /Applications/VRMQuickLook.app
+
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
   -u /Applications/VRMQuickLook.app
-qlmanage -r
+
+qlmanage -r && qlmanage -r cache
 ```
+
+Thumbnails already cached by Finder will disappear once you navigate away from and back to the folder.
+
+---
 
 ## Usage
 
-Once installed, `.vrm` and `.glb` files in Finder will show 3D avatar thumbnails automatically. Press **Space** on any such file to open an interactive QuickLook preview where you can rotate and zoom the avatar with the mouse.
+| Action | Result |
+|---|---|
+| Browse a folder with `.vrm` files | Thumbnails render automatically |
+| Press **Space** on a `.vrm` file | Interactive 3D preview — drag to rotate, scroll to zoom |
 
-Double-clicking a `.vrm` or `.glb` file opens it in macOS Preview (which handles `org.khronos.glb`, the GLB format that VRM is based on).
+The plugin runs silently in the background — there is no app window or Dock icon.
 
-## Project Structure
-
-```
-Sources/
-  App/                        Host application (registers the UTI and extensions)
-    AppDelegate.swift
-    Info.plist                Declares com.vroid.vrm UTI (UTExportedTypeDeclarations)
-    VRMQuickLook.entitlements
-  PreviewExtension/           QuickLook preview extension (Space bar)
-    PreviewViewController.swift
-    Info.plist
-    VRMPreviewExtension.entitlements
-  ThumbnailExtension/         QuickLook thumbnail extension (Finder icons)
-    ThumbnailProvider.swift
-    Info.plist
-    VRMThumbnailExtension.entitlements
-project.yml                   xcodegen project definition
-```
+---
 
 ## Troubleshooting
 
-**Thumbnails still show the old look after updating**
+**Thumbnails not showing after install**
 
-Touch the VRM files to invalidate the Finder cache, then re-open the folder:
-
-```bash
-find /path/to/vrm/files -name "*.vrm" -o -name "*.glb" -exec touch {} \;
-```
-
-**ThumbnailsAgent stopped responding**
+Touch the files to bust the Finder cache, then re-open the folder:
 
 ```bash
-launchctl start com.apple.quicklook.ThumbnailsAgent
+find /path/to/your/vrm/files -name "*.vrm" -exec touch {} \;
+killall Finder
 ```
 
-**Extension not appearing in QuickLook**
+**Extension not listed in QuickLook**
 
 ```bash
 pluginkit -m -v | grep vroid
 ```
 
-If missing, re-register:
+If nothing appears, re-register manually:
 
 ```bash
-pluginkit -a /Applications/VRMQuickLook.app/Contents/PlugIns/VRMThumbnailExtension.appex
 pluginkit -a /Applications/VRMQuickLook.app/Contents/PlugIns/VRMPreviewExtension.appex
+pluginkit -a /Applications/VRMQuickLook.app/Contents/PlugIns/VRMThumbnailExtension.appex
+```
+
+**Space bar preview shows nothing / spinner never disappears**
+
+The VRM file may use unsupported extensions. VRM QuickLook uses [GLTFKit2](https://github.com/warrenm/GLTFKit2) for loading, which renders using standard PBR materials (MToon cel-shading is not supported).
+
+---
+
+## Project Structure
+
+```
+Sources/
+  App/                    Silent host app — registers the com.vroid.vrm UTI
+  PreviewExtension/       Space bar interactive 3D preview
+  ThumbnailExtension/     Finder thumbnail generation
+project.yml               xcodegen project definition
 ```
 
 ## Dependencies
 
-- [GLTFKit2](https://github.com/warrenm/GLTFKit2) — glTF/VRM loading (fetched automatically via Swift Package Manager)
+- [GLTFKit2](https://github.com/warrenm/GLTFKit2) — glTF/VRM loading via Swift Package Manager

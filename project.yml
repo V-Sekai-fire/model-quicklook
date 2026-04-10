@@ -47,6 +47,10 @@ targets:
           if [ -d "$SRC" ]; then
             rm -rf "$DST"
             ditto "$SRC" "$DST"
+            codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" \
+              --preserve-metadata=identifier,entitlements,flags \
+              --timestamp=none \
+              "${DST}/Versions/A"
           fi
     dependencies:
       - package: GLTFKit2
