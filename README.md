@@ -49,11 +49,7 @@ No Apple Developer account required — the project uses ad-hoc signing.
 brew install xcodegen
 git clone <THIS_REPO_URL>
 cd vrm-quicklook
-```
 
-> **Note:** The `.xcodeproj` is not committed — generate it from `project.yml` first:
-
-```bash
 xcodegen generate
 ```
 
@@ -65,6 +61,7 @@ xcodebuild -project VRMQuickLook.xcodeproj \
   -configuration Release \
   -destination 'platform=macOS' \
   ARCHS="arm64 x86_64" \
+  ONLY_ACTIVE_ARCH=NO \
   build
 ```
 
@@ -143,3 +140,26 @@ The VRM file may use unsupported extensions. VRM QuickLook uses [GLTFKit2](https
 ## Dependencies
 
 - [GLTFKit2](https://github.com/warrenm/GLTFKit2): glTF/VRM loading via Swift Package Manager
+
+---
+
+## Creating a release
+
+```bash
+xcodegen generate
+
+xcodebuild -project VRMQuickLook.xcodeproj \
+  -scheme VRMQuickLook \
+  -configuration Release \
+  -destination 'platform=macOS' \
+  ARCHS="arm64 x86_64" \
+  ONLY_ACTIVE_ARCH=NO \
+  build
+
+BUILT=$(find ~/Library/Developer/Xcode/DerivedData/VRMQuickLook-* \
+  -name "VRMQuickLook.app" -path "*/Release/*" 2>/dev/null | head -1)
+
+ditto -c -k --keepParent "$BUILT" VRMQuickLook.zip
+```
+
+> Use `ditto` (not `zip`) to package the app — it preserves symlinks and extended attributes that the app bundle requires.
