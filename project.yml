@@ -29,6 +29,8 @@ targets:
     platform: macOS
     sources:
       - path: Sources/App
+        resourceFileTypes:
+          - icns
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.vroid.VRMQuickLook
