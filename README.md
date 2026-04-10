@@ -34,29 +34,48 @@ qlmanage -r && qlmanage -r cache
 > **First launch:** MacOS may show a "cannot be opened" Gatekeeper prompt. Right-click the app in Finder, choose **Open**, then click **Open** again to allow it or run:
 
 ```bash
-xattr -d com.apple.quarantine /Applications/VRMQuickLook.app
+xattr -dr com.apple.quarantine /Applications/VRMQuickLook.app
 ```
 
 ---
 
 ### Build from source
 
-**Requirements:** MacOS 13+, Xcode 15+, [xcodegen](https://github.com/yonaskolb/XcodeGen)
+**Requirements:** macOS 13+, Xcode 15+, [xcodegen](https://github.com/yonaskolb/XcodeGen)
+
+No Apple Developer account required — the project uses ad-hoc signing.
 
 ```bash
 brew install xcodegen
 git clone <THIS_REPO_URL>
 cd vrm-quicklook
+```
+
+> **Note:** The `.xcodeproj` is not committed — generate it from `project.yml` first:
+
+```bash
 xcodegen generate
 ```
 
-Open `VRMQuickLook.xcodeproj` in Xcode, set your **Team** under *Signing & Capabilities* for all three targets, then build (⌘B).
+Build a universal binary (Apple Silicon + Intel):
+
+```bash
+xcodebuild -project VRMQuickLook.xcodeproj \
+  -scheme VRMQuickLook \
+  -configuration Release \
+  -destination 'platform=macOS' \
+  ARCHS="arm64 x86_64" \
+  build
+```
+
+Install:
 
 ```bash
 BUILT=$(find ~/Library/Developer/Xcode/DerivedData/VRMQuickLook-* \
-  -name "VRMQuickLook.app" -path "*/Debug/*" 2>/dev/null | head -1)
+  -name "VRMQuickLook.app" -path "*/Release/*" 2>/dev/null | head -1)
 
-cp -R "$BUILT" /Applications/VRMQuickLook.app
+rm -rf /Applications/VRMQuickLook.app
+ditto "$BUILT" /Applications/VRMQuickLook.app
 
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
   -f /Applications/VRMQuickLook.app
