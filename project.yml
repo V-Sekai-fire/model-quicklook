@@ -19,6 +19,7 @@ settings:
     ARCHS: "$(ARCHS_STANDARD)"
     ONLY_ACTIVE_ARCH: NO
     CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: 59748AM4YC
     ENABLE_HARDENED_RUNTIME: YES
 
 targets:
@@ -45,10 +46,11 @@ targets:
           mkdir -p "${BUILT_PRODUCTS_DIR}/VRMQuickLook.app/Contents/Frameworks"
           if [ -d "$SRC" ]; then
             rm -rf "$DST"
-            cp -R "$SRC" "$DST"
-            codesign --force --sign - "$DST"
+            ditto "$SRC" "$DST"
           fi
     dependencies:
+      - package: GLTFKit2
+        product: GLTFKit2
       - target: VRMPreviewExtension
         embed: true
       - target: VRMThumbnailExtension
