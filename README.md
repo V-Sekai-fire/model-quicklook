@@ -13,9 +13,13 @@
 
 MacOS QuickLook plugin for `.vrm` 3D avatar files. Adds Finder thumbnails and interactive Space bar previews.
 
-> **NOTE:** Tested on MacOS Tahoe 26.4
+> This repository is the public distribution copy of the project.
+> The canonical development repository is private.
+> Changes made here may be overwritten by the automated publish pipeline.
 
 ## Installing
+
+> **NOTE:** Tested on MacOS Tahoe 26.4
 
 ### Prebuilt Application
 
