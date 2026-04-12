@@ -18,51 +18,57 @@ final class ThumbnailProvider: QLThumbnailProvider {
         let accessing = fileURL.startAccessingSecurityScopedResource()
 
         GLTFAsset.load(with: fileURL, options: [:]) { _, status, asset, error, _ in
-            // Skip intermediate progress callbacks — only act on final result.
-            guard status == .complete || error != nil else { return }
+            autoreleasepool {
+                // Skip intermediate progress callbacks — only act on final result.
+                guard status == .complete || error != nil else { return }
 
-            // Safe to stop security-scoped access now that loading is done.
-            if accessing { fileURL.stopAccessingSecurityScopedResource() }
+                // Safe to stop security-scoped access now that loading is done.
+                if accessing { fileURL.stopAccessingSecurityScopedResource() }
 
-            if let error {
-                handler(nil, error)
-                return
+                if let error {
+                    handler(nil, error)
+                    return
+                }
+                guard let asset else {
+                    handler(nil, ThumbnailError.assetLoadFailed)
+                    return
+                }
+
+                let scene = SCNScene(gltfAsset: asset)
+
+                let reply = QLThumbnailReply(contextSize: size) { [scene] context -> Bool in
+                    autoreleasepool {
+                        let renderer = SCNRenderer(device: nil, options: nil)
+                        renderer.scene = scene
+                        ThumbnailProvider.configureScene(scene, renderer: renderer)
+
+                        let pixelSize = CGSize(
+                            width: size.width * scale,
+                            height: size.height * scale
+                        )
+                        let image = renderer.snapshot(
+                            atTime: 0,
+                            with: pixelSize,
+                            antialiasingMode: .multisampling2X
+                        )
+
+                        renderer.scene = nil
+
+                        // Draw into the CGContext directly via CGImage to avoid
+                        // NSGraphicsContext state issues in an extension process.
+                        guard let cgImage = image.cgImage(
+                            forProposedRect: nil,
+                            context: nil,
+                            hints: nil
+                        ) else { return false }
+
+                        context.draw(cgImage, in: CGRect(origin: .zero, size: pixelSize))
+                        return true
+                    }
+                }
+
+                handler(reply, nil)
             }
-            guard let asset else {
-                handler(nil, ThumbnailError.assetLoadFailed)
-                return
-            }
-
-            let scene = SCNScene(gltfAsset: asset)
-
-            let reply = QLThumbnailReply(contextSize: size) { [scene] context -> Bool in
-                let renderer = SCNRenderer(device: nil, options: nil)
-                renderer.scene = scene
-                ThumbnailProvider.configureScene(scene, renderer: renderer)
-
-                let pixelSize = CGSize(
-                    width: size.width * scale,
-                    height: size.height * scale
-                )
-                let image = renderer.snapshot(
-                    atTime: 0,
-                    with: pixelSize,
-                    antialiasingMode: .multisampling4X
-                )
-
-                // Draw into the CGContext directly via CGImage to avoid
-                // NSGraphicsContext state issues in an extension process.
-                guard let cgImage = image.cgImage(
-                    forProposedRect: nil,
-                    context: nil,
-                    hints: nil
-                ) else { return false }
-
-                context.draw(cgImage, in: CGRect(origin: .zero, size: pixelSize))
-                return true
-            }
-
-            handler(reply, nil)
         }
     }
 

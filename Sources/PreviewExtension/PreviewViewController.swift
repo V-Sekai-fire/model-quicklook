@@ -7,7 +7,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
 
     // MARK: - UI
 
-    private var sceneView: SCNView!
+    private var sceneView: SCNView?
     private var spinner: NSProgressIndicator!
 
     // MARK: - Lifecycle
@@ -16,15 +16,6 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
         let container = NSView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
         container.wantsLayer = true
         container.layer?.backgroundColor = NSColor(white: 0.12, alpha: 1).cgColor
-
-        sceneView = SCNView(frame: container.bounds)
-        sceneView.autoresizingMask = [.width, .height]
-        sceneView.backgroundColor = NSColor(white: 0.12, alpha: 1)
-        sceneView.antialiasingMode = .multisampling4X
-        sceneView.allowsCameraControl = true
-        sceneView.autoenablesDefaultLighting = false
-        sceneView.isHidden = true
-        container.addSubview(sceneView)
 
         spinner = NSProgressIndicator(frame: NSRect(x: 0, y: 0, width: 32, height: 32))
         spinner.style = .spinning
@@ -39,6 +30,11 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
         self.view = container
     }
 
+    deinit {
+        sceneView?.scene = nil
+        sceneView = nil
+    }
+
     // MARK: - QLPreviewingController
 
     func preparePreviewOfFile(
@@ -46,6 +42,19 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
         completionHandler handler: @escaping (Error?) -> Void
     ) {
         spinner.startAnimation(nil)
+
+        // Create SCNView lazily here so Metal doesn't initialize until actually needed.
+        if sceneView == nil {
+            let sv = SCNView(frame: view.bounds)
+            sv.autoresizingMask = [.width, .height]
+            sv.backgroundColor = NSColor(white: 0.12, alpha: 1)
+            sv.antialiasingMode = .multisampling4X
+            sv.allowsCameraControl = true
+            sv.autoenablesDefaultLighting = false
+            sv.isHidden = true
+            view.addSubview(sv, positioned: .below, relativeTo: spinner)
+            sceneView = sv
+        }
 
         // Start security-scoped access so the sandboxed extension can read the file.
         let accessing = url.startAccessingSecurityScopedResource()
@@ -75,7 +84,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
 
                 let scene = SCNScene(gltfAsset: asset)
                 self.setupScene(scene)
-                self.sceneView.isHidden = false
+                self.sceneView?.isHidden = false
                 handler(nil)
             }
         }
@@ -84,6 +93,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
     // MARK: - Scene Setup
 
     private func setupScene(_ scene: SCNScene) {
+        guard let sceneView else { return }
         sceneView.scene = scene
 
         // Three-point lighting: key, fill, rim + ambient
