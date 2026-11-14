@@ -14,7 +14,7 @@
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>VRMThumbnailExtension</string>
+    <string>ModelThumbnailExtension</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>CFBundleShortVersionString</key>
@@ -29,6 +29,8 @@
             <key>QLSupportedContentTypes</key>
             <array>
                 <string>com.vroid.vrm</string>
+                <string>org.khronos.gltf</string>
+                <string>org.khronos.glb</string>
             </array>
             <key>QLThumbnailMinimumDimension</key>
             <integer>64</integer>

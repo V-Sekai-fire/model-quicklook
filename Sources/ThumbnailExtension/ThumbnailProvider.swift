@@ -2,6 +2,9 @@ import Cocoa
 import QuickLookThumbnailing
 import SceneKit
 import GLTFKit2
+import os
+
+private let log = Logger(subsystem: "com.vsekai.ModelQuickLook", category: "thumbnail")
 
 final class ThumbnailProvider: QLThumbnailProvider {
 
@@ -10,6 +13,7 @@ final class ThumbnailProvider: QLThumbnailProvider {
         _ handler: @escaping (QLThumbnailReply?, Error?) -> Void
     ) {
         let fileURL = request.fileURL
+        log.notice("thumbnail request for \(fileURL.lastPathComponent, privacy: .public)")
         let side = min(request.maximumSize.width, request.maximumSize.height)
         let size = CGSize(width: side, height: side)
         let scale = request.scale
@@ -26,10 +30,12 @@ final class ThumbnailProvider: QLThumbnailProvider {
                 if accessing { fileURL.stopAccessingSecurityScopedResource() }
 
                 if let error {
+                    log.error("load failed for \(fileURL.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
                     handler(nil, error)
                     return
                 }
                 guard let asset else {
+                    log.error("no asset for \(fileURL.lastPathComponent, privacy: .public)")
                     handler(nil, ThumbnailError.assetLoadFailed)
                     return
                 }
@@ -60,7 +66,10 @@ final class ThumbnailProvider: QLThumbnailProvider {
                             forProposedRect: nil,
                             context: nil,
                             hints: nil
-                        ) else { return false }
+                        ) else {
+                            log.error("snapshot produced no CGImage")
+                            return false
+                        }
 
                         context.draw(cgImage, in: CGRect(origin: .zero, size: pixelSize))
                         return true

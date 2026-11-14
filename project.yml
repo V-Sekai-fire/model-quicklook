@@ -1,6 +1,6 @@
-name: VRMQuickLook
+name: ModelQuickLook
 options:
-  bundleIdPrefix: com.vroid
+  bundleIdPrefix: com.vsekai
   deploymentTarget:
     macOS: "13.0"
   xcodeVersion: "15"
@@ -24,7 +24,7 @@ settings:
 
 targets:
 
-  VRMQuickLook:
+  ModelQuickLook:
     type: application
     platform: macOS
     sources:
@@ -33,60 +33,60 @@ targets:
           - icns
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.vroid.VRMQuickLook
-        PRODUCT_NAME: VRMQuickLook
+        PRODUCT_BUNDLE_IDENTIFIER: com.vsekai.ModelQuickLook
+        PRODUCT_NAME: ModelQuickLook
         INFOPLIST_FILE: Sources/App/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         LD_RUNPATH_SEARCH_PATHS: "@executable_path/../Frameworks"
-        CODE_SIGN_ENTITLEMENTS: Sources/App/VRMQuickLook.entitlements
+        CODE_SIGN_ENTITLEMENTS: Sources/App/ModelQuickLook.entitlements
     postBuildScripts:
       - name: Embed GLTFKit2
         alwaysOutOfDate: true
         script: |
           set -e
           SRC="${BUILT_PRODUCTS_DIR}/GLTFKit2.framework"
-          DST="${BUILT_PRODUCTS_DIR}/VRMQuickLook.app/Contents/Frameworks/GLTFKit2.framework"
-          mkdir -p "${BUILT_PRODUCTS_DIR}/VRMQuickLook.app/Contents/Frameworks"
+          DST="${BUILT_PRODUCTS_DIR}/ModelQuickLook.app/Contents/Frameworks/GLTFKit2.framework"
+          mkdir -p "${BUILT_PRODUCTS_DIR}/ModelQuickLook.app/Contents/Frameworks"
           if [ -d "$SRC" ]; then
             rm -rf "$DST"
             ditto "$SRC" "$DST"
           fi
     dependencies:
-      - target: VRMPreviewExtension
+      - target: ModelPreviewExtension
         embed: true
-      - target: VRMThumbnailExtension
+      - target: ModelThumbnailExtension
         embed: true
 
-  VRMPreviewExtension:
+  ModelPreviewExtension:
     type: app-extension
     platform: macOS
     sources:
       - path: Sources/PreviewExtension
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.vroid.VRMQuickLook.PreviewExtension
-        PRODUCT_NAME: VRMPreviewExtension
+        PRODUCT_BUNDLE_IDENTIFIER: com.vsekai.ModelQuickLook.PreviewExtension
+        PRODUCT_NAME: ModelPreviewExtension
         INFOPLIST_FILE: Sources/PreviewExtension/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         LD_RUNPATH_SEARCH_PATHS: "@executable_path/../../../../Frameworks"
-        CODE_SIGN_ENTITLEMENTS: Sources/PreviewExtension/VRMPreviewExtension.entitlements
+        CODE_SIGN_ENTITLEMENTS: Sources/PreviewExtension/ModelPreviewExtension.entitlements
     dependencies:
       - package: GLTFKit2
         product: GLTFKit2
 
-  VRMThumbnailExtension:
+  ModelThumbnailExtension:
     type: app-extension
     platform: macOS
     sources:
       - path: Sources/ThumbnailExtension
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.vroid.VRMQuickLook.ThumbnailExtension
-        PRODUCT_NAME: VRMThumbnailExtension
+        PRODUCT_BUNDLE_IDENTIFIER: com.vsekai.ModelQuickLook.ThumbnailExtension
+        PRODUCT_NAME: ModelThumbnailExtension
         INFOPLIST_FILE: Sources/ThumbnailExtension/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         LD_RUNPATH_SEARCH_PATHS: "@executable_path/../../../../Frameworks"
-        CODE_SIGN_ENTITLEMENTS: Sources/ThumbnailExtension/VRMThumbnailExtension.entitlements
+        CODE_SIGN_ENTITLEMENTS: Sources/ThumbnailExtension/ModelThumbnailExtension.entitlements
     dependencies:
       - package: GLTFKit2
         product: GLTFKit2
