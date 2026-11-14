@@ -20,7 +20,7 @@ settings:
     ONLY_ACTIVE_ARCH: NO
     CODE_SIGN_STYLE: Manual
     CODE_SIGN_IDENTITY: "-"
-    ENABLE_HARDENED_RUNTIME: NO
+    ENABLE_HARDENED_RUNTIME: YES
 
 targets:
 
@@ -41,6 +41,7 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Sources/App/VRMQuickLook.entitlements
     postBuildScripts:
       - name: Embed GLTFKit2
+        alwaysOutOfDate: true
         script: |
           set -e
           SRC="${BUILT_PRODUCTS_DIR}/GLTFKit2.framework"

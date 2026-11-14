@@ -147,7 +147,9 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
             maxBounds.y - minBounds.y,
             maxBounds.z - minBounds.z
         )
-        let maxDim: CGFloat = max(max(size.x, size.y), size.z)
+        let rawDim: CGFloat = max(max(size.x, size.y), size.z)
+        // Empty or degenerate bounds would give zNear = 0 and distance = 0.
+        let maxDim: CGFloat = (rawDim.isFinite && rawDim > 0) ? rawDim : 1
         let fovRadians: CGFloat = 60.0 * CGFloat.pi / 180.0
         let halfFov: CGFloat = fovRadians / 2.0
         let distance: CGFloat = (maxDim / (2.0 * tan(halfFov))) * 1.4
@@ -159,7 +161,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
 
         let cameraNode = SCNNode()
         cameraNode.camera = camera
-        cameraNode.position = SCNVector3(0, center.y, center.z + distance)
+        cameraNode.position = SCNVector3(center.x, center.y, center.z + distance)
         cameraNode.look(at: center)
         scene.rootNode.addChildNode(cameraNode)
         sceneView.pointOfView = cameraNode

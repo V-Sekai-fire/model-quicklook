@@ -117,7 +117,9 @@ final class ThumbnailProvider: QLThumbnailProvider {
         )
         // Fit by height for a square thumbnail so the avatar fills the frame
         // vertically. Use a tighter padding (1.1x) than the preview (1.4x).
-        let maxDim: CGFloat = max(extents.y, extents.z)
+        let rawDim: CGFloat = max(extents.y, extents.z)
+        // Empty or degenerate bounds would give zNear = 0 and distance = 0.
+        let maxDim: CGFloat = (rawDim.isFinite && rawDim > 0) ? rawDim : 1
         let fovRadians: CGFloat = 60.0 * CGFloat.pi / 180.0
         let halfFov: CGFloat = fovRadians / 2.0
         let distance: CGFloat = (maxDim / (2.0 * tan(halfFov))) * 1.1
@@ -129,7 +131,7 @@ final class ThumbnailProvider: QLThumbnailProvider {
 
         let cameraNode = SCNNode()
         cameraNode.camera = camera
-        cameraNode.position = SCNVector3(0, center.y, center.z + distance)
+        cameraNode.position = SCNVector3(center.x, center.y, center.z + distance)
         cameraNode.look(at: center)
         scene.rootNode.addChildNode(cameraNode)
 
